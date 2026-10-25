@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAR-TAC // Republic Console</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Courier New',monospace;background:#000;color:#a8e6ff;font-size:13px;user-select:none}
+#wallpaper{position:fixed;inset:0;z-index:0;background:radial-gradient(circle at 50% 50%,#001a33 0%,#000814 100%)}
+#wallpaper::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.06) 1px,transparent 1px);background-size:40px 40px}
+#scanlines{position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 1px,transparent 1px,transparent 3px);mix-blend-mode:multiply}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:9997;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,10,.7) 100%)}
+#desktop{position:fixed;inset:0 0 44px 0;z-index:1}
+#windows-layer{position:absolute;inset:0;pointer-events:none}
+#windows-layer>*{pointer-events:auto}
+#icons{position:absolute;inset:0;z-index:2;pointer-events:none}
+.icon{position:absolute;width:92px;padding:8px 4px;text-align:center;cursor:grab;border:1px solid transparent;border-radius:4px;pointer-events:auto;user-select:none;will-change:left,top}
+.icon:active{cursor:grabbing}
+.icon:hover{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.4)}
+.icon .glyph{font-size:30px;display:block;line-height:1;margin-bottom:6px;filter:drop-shadow(0 0 6px rgba(0,212,255,.7))}
+.icon .label{font-size:11px;letter-spacing:.5px;text-shadow:0 1px 2px #000}
+.window{position:absolute;background:rgba(0,15,30,.94);border:1px solid #00d4ff;box-shadow:0 0 24px rgba(0,212,255,.45);display:flex;flex-direction:column;min-width:260px;min-height:160px;border-radius:3px;overflow:hidden}
+.window.maximized{left:0!important;top:0!important;right:0;bottom:0;width:auto!important;height:auto!important}
+.titlebar{background:linear-gradient(180deg,rgba(0,70,120,.95),rgba(0,30,60,.95));padding:6px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #00d4ff;cursor:move;flex-shrink:0}
+.titlebar .title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7fdcff;text-shadow:0 0 8px #00d4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titlebar .buttons{display:flex;gap:4px;flex-shrink:0}
+.titlebar button{background:rgba(0,30,60,.6);border:1px solid #00d4ff;color:#7fdcff;width:20px;height:20px;cursor:pointer;font-family:inherit;font-size:12px;line-height:1;padding:0;border-radius:2px;transition:all .1s}
+.titlebar button:hover{background:#00d4ff;color:#000}
+.titlebar button.close:hover{background:#ff4a4a;border-color:#ff4a4a}
+.window-body{flex:1;overflow:auto;padding:10px}
+#taskbar{position:fixed;bottom:0;left:0;right:0;height:44px;background:rgba(0,10,25,.96);border-top:1px solid #00d4ff;box-shadow:0 -2px 20px rgba(0,212,255,.3);display:flex;align-items:center;gap:8px;padding:0 10px;z-index:10000}
+#startBtn{padding:8px 18px;background:linear-gradient(180deg,rgba(0,80,140,.9),rgba(0,40,80,.9));border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;font-size:12px;letter-spacing:2px;cursor:pointer;border-radius:3px;text-shadow:0 0 6px #00d4ff;transition:all .15s}
+#startBtn:hover,#startBtn.active{background:#00d4ff;color:#000;text-shadow:none}
+#tasks{display:flex;gap:6px;flex:1;overflow:hidden}
+.task-item{padding:6px 12px;font-size:11px;letter-spacing:1px;background:rgba(0,40,80,.6);border:1px solid rgba(0,212,255,.5);color:#7fdcff;cursor:pointer;border-radius:3px;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.task-item:hover{background:rgba(0,212,255,.2)}
+.task-item.active{background:rgba(0,212,255,.3);border-color:#00d4ff}
+#clock{color:#7fdcff;font-size:12px;letter-spacing:2px;text-shadow:0 0 6px #00d4ff;padding-left:10px}
+#startMenu{position:fixed;bottom:48px;left:10px;width:250px;background:rgba(0,15,30,.97);border:1px solid #00d4ff;box-shadow:0 0 30px rgba(0,212,255,.5);padding:8px;border-radius:3px;z-index:10001;display:none}
+#startMenu.open{display:block}
+#startMenu .menu-header{font-size:10px;letter-spacing:2px;color:#4ea8d6;padding:4px 8px;border-bottom:1px solid rgba(0,212,255,.3);margin-bottom:6px}
+#startMenu .menu-item{display:flex;align-items:center;gap:10px;padding:8px;cursor:pointer;border-radius:2px;font-size:12px;color:#a8e6ff}
+#startMenu .menu-item:hover{background:rgba(0,212,255,.2);color:#fff}
+#startMenu .menu-item .glyph{font-size:18px}
+#boot{position:fixed;inset:0;background:#000;color:#00d4ff;display:flex;align-items:center;justify-content:center;z-index:99999;font-size:13px;letter-spacing:2px;text-shadow:0 0 8px #00d4ff;transition:opacity .6s}
+#boot .boot-lines>div{margin:4px 0}
+#boot .boot-lines>div:first-child{color:#fff;font-size:16px;margin-bottom:12px}
+.golo-header{display:flex;gap:6px;margin-bottom:8px}
+.golo-search{flex:1;padding:6px 8px;background:rgba(0,20,40,.8);border:1px solid #00d4ff;color:#a8e6ff;font-family:inherit;font-size:12px;outline:none}
+.golo-search:focus{box-shadow:0 0 8px rgba(0,212,255,.5)}
+.golo-content{display:flex;gap:8px;height:calc(100% - 44px)}
+.golo-list{width:240px;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:4px}
+.golo-item{padding:6px 8px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.1);font-size:12px}
+.golo-item:hover{background:rgba(0,212,255,.15)}
+.golo-item.active{background:rgba(0,212,255,.25);color:#fff}
+.golo-item .cat{font-size:9px;color:#4ea8d6;letter-spacing:1px;text-transform:uppercase}
+.golo-reader{flex:1;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:12px}
+.golo-reader h2{color:#7fdcff;font-size:16px;letter-spacing:1px;margin:4px 0 8px;text-shadow:0 0 8px rgba(0,212,255,.5)}
+.golo-reader .body{white-space:pre-wrap;line-height:1.55;font-size:12px}
+.rex-frame{width:100%;height:100%;border:none;display:block;background:#fff}
+.fin-tabs{display:flex;gap:4px;margin-bottom:10px;flex-shrink:0}
+.fin-tabs button{padding:8px 16px;background:rgba(0,40,80,.6);border:1px solid rgba(0,212,255,.4);color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
+.fin-tabs button.active{background:rgba(0,212,255,.3);border-color:#00d4ff;color:#fff}
+.fin-body{height:calc(100% - 44px);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.fin-ticker-bar{flex-shrink:0;height:34px;overflow:hidden;position:relative;border:1px solid rgba(0,212,255,.4);background:rgba(0,10,25,.8);display:flex;align-items:center;pointer-events:none}
+.fin-ticker-track{display:flex;white-space:nowrap;animation:fin-marquee 90s linear infinite;will-change:transform}
+@keyframes fin-marquee{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+.fin-tick-item{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:0 12px;border-right:1px solid rgba(0,212,255,.2)}
+.fin-tick-name{color:#a8e6ff}
+.fin-tick-price{font-weight:bold}
+.fin-up{color:#4eff7a}
+.fin-down{color:#ff6b6b}
+.fin-flat{color:#7fdcff}
+.fin-grid-wrap{flex:1;overflow-y:auto;border:1px solid rgba(0,212,255,.3);background:rgba(0,10,25,.6);padding:8px;min-height:0}
+.fin-category{margin-bottom:14px}
+.fin-cat-title{color:#00d4ff;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid rgba(0,212,255,.3);margin-bottom:4px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12px}
+.fin-table td{padding:4px 6px;border-bottom:1px dotted rgba(0,212,255,.15)}
+.fin-table td:last-child{text-align:right;font-weight:bold;white-space:nowrap}
+.fin-table tr:hover{background:rgba(0,212,255,.08)}
+.fin-footer{flex-shrink:0;font-size:9px;color:#4ea8d6;text-align:center;padding:4px;border-top:1px solid rgba(0,212,255,.2)}
+.fin-iframe{width:100%;height:100%;border:none;background:#fff}
+.ms-wrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+.ms-hud{display:flex;gap:20px;font-size:12px;color:#7fdcff;letter-spacing:1px}
+.ms-hud span b{color:#fff}
+.ms-grid{display:grid;gap:2px}
+.ms-cell{width:30px;height:30px;background:rgba(0,40,80,.7);border:1px solid rgba(0,212,255,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:14px;user-select:none;transition:background .1s}
+.ms-cell:hover{background:rgba(0,212,255,.2)}
+.ms-cell.revealed{background:rgba(0,20,40,.8);cursor:default}
+.ms-cell.revealed:hover{background:rgba(0,20,40,.8)}
+.ms-cell.mine{background:#400}
+.ms-cell.boom{background:#800}
+.ms-cell.flag{color:#ffb454}
+.ms-cell.n1{color:#4ec9ff}.ms-cell.n2{color:#4eff7a}.ms-cell.n3{color:#ffb454}.ms-cell.n4{color:#ff6b6b}
+.ms-cell.n5{color:#ff4a4a}.ms-cell.n6{color:#b454ff}.ms-cell.n7{color:#ff54c9}.ms-cell.n8{color:#ccc}
+.ms-reset{padding:6px 20px;background:rgba(0,40,80,.9);border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;cursor:pointer;letter-spacing:2px;font-size:11px}
+.ms-reset:hover{background:#00d4ff;color:#000}
+.sol-wrap{display:flex;flex-direction:column;gap:12px}
+.sol-top{display:flex;gap:8px}
+.sol-bottom{display:flex;gap:8px;min-height:400px}
+.sol-pile{width:66px;height:94px;border:1px solid rgba(0,212,255,.5);border-radius:4px;background:rgba(0,20,40,.6);position:relative;flex-shrink:0}
+.sol-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(0,212,255,.3);pointer-events:none}
+.sol-stock{display:flex;align-items:center;justify-content:center;font-size:30px;color:#00d4ff;cursor:pointer}
+.sol-stock.empty{color:rgba(0,212,255,.3)}
+.sol-tab{width:66px;min-height:94px;border:1px dashed rgba(0,212,255,.3);border-radius:4px;display:flex;flex-direction:column;flex-shrink:0;position:relative}
+.sol-card{width:66px;height:94px;background:linear-gradient(135deg,#e8f4ff,#b8d8f0);border-radius:4px;border:1px solid #00a8e0;display:flex;align-items:flex-start;justify-content:flex-start;font-weight:bold;font-size:13px;color:#000;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.4);flex-shrink:0;padding:4px;position:relative}
+.sol-card .sol-rank{font-size:13px;line-height:1}
+.sol-card .sol-suit{font-size:15px;line-height:1;margin-top:1px}
+.sol-tab .sol-card{position:absolute;left:0;top:0}
+.sol-tab .sol-card.back{cursor:pointer}
+.sol-card.red{color:#c00}
+.sol-card.black{color:#000}
+.sol-card.back{background:repeating-linear-gradient(45deg,#003366,#003366 6px,#004488 6px,#004488 12px);border-color:#00a8e0}
+.sol-card.back .sol-rank,.sol-card.back .sol-suit{display:none}
+.sol-card.sel{box-shadow:0 0 0 2px #00d4ff,0 0 12px #00d4ff;z-index:100}
+.sol-card.top{box-shadow:0 0 8px rgba(0,212,255,.6)}
+.sol-status{color:#7fdcff;font-size:12px;text-align:center;letter-spacing:2px}
+.calc{display:flex;flex-direction:column;height:100%;gap:8px}
+.calc-display{width:100%;padding:10px;background:rgba(0,30,60,.9);border:1px solid #00d4ff;color:#7fdcff;font-size:22px;text-align:right;font-family:inherit;outline:none}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;flex:1}
+.calc-grid button{background:rgba(0,40,80,.8);border:1px solid #00d4ff;color:#a8e6ff;font-family:inherit;font-size:16px;cursor:pointer}
+.calc-grid button:hover{background:#00d4ff;color:#000}
+.note{display:flex;flex-direction:column;height:100%;gap:6px}
+.note-area{flex:1;width:100%;background:rgba(0,10,25,.9);border:1px solid rgba(0,212,255,.4);color:#a8e6ff;font-family:inherit;font-size:13px;padding:10px;resize:none;outline:none;line-height:1.5}
+.note-bar{display:flex;gap:8px;align-items:center}
+.note-bar button{padding:6px 12px;background:rgba(0,40,80,.9);border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
+.note-bar button:hover{background:#00d4ff;color:#000}
+.note-status{font-size:11px;color:#4eff7a}
+.mc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px}
+.mc-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px 12px;border:1px solid rgba(0,212,255,.4);border-radius:6px;background:rgba(0,20,40,.6);cursor:pointer;transition:all .15s}
+.mc-tile:hover{background:rgba(0,212,255,.15);border-color:#00d4ff;transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,212,255,.3)}
+.mc-tile .mc-icon{font-size:44px;filter:drop-shadow(0 0 8px rgba(0,212,255,.5))}
+.mc-tile .mc-label{font-size:12px;color:#7fdcff;letter-spacing:1px;text-align:center}
+.recycle-hint{color:#4ea8d6;font-size:11px;margin-bottom:10px;letter-spacing:1px}
+.recycle-item{display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid rgba(0,212,255,.2)}
+.recycle-item .r-icon{font-size:22px;filter:drop-shadow(0 0 4px rgba(0,212,255,.5))}
+.recycle-item .r-info{flex:1}
+.recycle-item .r-name{font-size:12px;color:#a8e6ff}
+.recycle-item .r-meta{font-size:10px;color:#4ea8d6;letter-spacing:1px}
+.recycle-item .r-btn{background:transparent;border:1px solid #00d4ff;color:#7fdcff;cursor:pointer;padding:4px 10px;border-radius:3px;font-family:inherit;font-size:10px}
+.recycle-item .r-btn:hover{background:#00d4ff;color:#000}
+.recycle-item .r-btn.danger:hover{background:#ff4a4a;border-color:#ff4a4a}
+.recycle-empty{text-align:center;padding:30px 10px;color:#4ea8d6;font-size:12px}
+.recycle-actions{display:flex;gap:8px;margin-bottom:10px}
+.recycle-actions button{flex:1;padding:8px;background:rgba(0,40,80,.8);border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
+.recycle-actions button:hover{background:#00d4ff;color:#000}
+.settings-label{color:#4ea8d6;font-size:11px;letter-spacing:1px;margin-bottom:8px}
+.settings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wp-btn{background:transparent;border:1px solid rgba(0,212,255,.4);color:#a8e6ff;padding:6px;cursor:pointer;font-family:inherit;font-size:10px}
+.wp-btn:hover{border-color:#00d4ff}
+.wp-preview{height:50px;margin-bottom:4px;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="wallpaper"></div>
+<div id="vignette"></div>
+<div id="desktop">
+  <div id="icons"></div>
+  <div id="windows-layer"></div>
+</div>
+<div id="startMenu"></div>
+<div id="taskbar">
+  <button id="startBtn">◤ ПУСК ◢</button>
+  <div id="tasks"></div>
+  <div id="clock"></div>
+</div>
+<div id="scanlines"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   STORE
+   ========================================================= */
+const store = {
+  get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch(e){ return def; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+function escapeHTML(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* =========================================================
+   WALLPAPERS
+   ========================================================= */
+const WALLPAPERS = {
+  console:   { name: 'Консоль',   css: 'radial-gradient(circle at 50% 50%, #001a33 0%, #000814 100%)' },
+  grid:      { name: 'Голосеть',  css: 'radial-gradient(circle at 30% 70%, #00264d 0%, #000814 100%)' },
+  bliss:     { name: 'Windows XP',css: 'linear-gradient(180deg, #6fb1fc 0%, #b4d9ff 45%, #7fb069 45%, #4a7c3c 100%)' },
+  tatooine:  { name: 'Татуин',    css: 'linear-gradient(180deg, #ff9a56 0%, #ffd89b 40%, #c76b3a 75%, #5a2a1a 100%)' },
+  coruscant: { name: 'Корусант',  css: 'radial-gradient(circle at 50% 100%, #4a148c 0%, #1a0033 40%, #000010 100%)' },
+  mustafar:  { name: 'Мустафар',  css: 'radial-gradient(circle at 50% 100%, #ff3b00 0%, #6b0000 50%, #100000 100%)' }
+};
+function applyWallpaper(key) {
+  const w = WALLPAPERS[key] || WALLPAPERS.console;
+  document.getElementById('wallpaper').style.background = w.css;
+  store.set('wallpaper', key);
+}
+
+/* =========================================================
+   WINDOW MANAGER
+   ========================================================= */
+const wins = {};
+let zTop = 100, winCount = 0;
+
+function createWindow(opts) {
+  const id = 'w' + (++winCount);
+  const el = document.createElement('div');
+  el.className = 'window';
+  el.style.width  = (opts.width  || 480) + 'px';
+  el.style.height = (opts.height || 360) + 'px';
+  const offset = (winCount % 8) * 26;
+  el.style.left = (opts.x ?? (80 + offset)) + 'px';
+  el.style.top  = (opts.y ?? (40 + offset)) + 'px';
+  el.style.zIndex = ++zTop;
+  el.innerHTML = `
+    <div class="titlebar">
+      <span class="title">${opts.title}</span>
+      <div class="buttons">
+        <button class="min" title="Свернуть">_</button>
+        <button class="max" title="Развернуть">▢</button>
+        <button class="close" title="Закрыть">×</button>
+      </div>
+    </div>
+    <div class="window-body"></div>`;
+  document.getElementById('windows-layer').appendChild(el);
+
+  const task = document.createElement('div');
+  task.className = 'task-item';
+  task.textContent = opts.title;
+  document.getElementById('tasks').appendChild(task);
+
+  wins[id] = { el, task, minimized: false, onClose: opts.onClose || null };
+
+  el.querySelector('.close').onclick = () => closeWindow(id);
+  el.querySelector('.min').onclick   = () => minimizeWindow(id);
+  el.querySelector('.max').onclick   = () => el.classList.toggle('maximized');
+
+  task.onclick = () => {
+    const w = wins[id]; if (!w) return;
+    if (w.minimized) { focusWindow(id); return; }
+    if (w.el.style.zIndex == zTop) { minimizeWindow(id); return; }
+    focusWindow(id);
+  };
+
+  const tb = el.querySelector('.titlebar');
+  tb.addEventListener('mousedown', (e) => {
+    if (e.target.tagName === 'BUTTON') return;
+    focusWindow(id);
+    const startX = e.clientX, startY = e.clientY;
+    const rect = el.getBoundingClientRect();
+    const ox = rect.left, oy = rect.top;
+    const move = (ev) => {
+      if (el.classList.contains('maximized')) return;
+      el.style.left = (ox + ev.clientX - startX) + 'px';
+      el.style.top  = Math.max(0, oy + ev.clientY - startY) + 'px';
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+
+  el.addEventListener('mousedown', () => focusWindow(id));
+
+  const body = el.querySelector('.window-body');
+  if (opts.render) opts.render(body, id);
+  else if (opts.html) body.innerHTML = opts.html;
+
+  focusWindow(id);
+  return { id, el, body };
+}
+function focusWindow(id) {
+  const w = wins[id]; if (!w) return;
+  w.el.style.zIndex = ++zTop;
+  w.el.style.display = 'flex';
+  w.minimized = false;
+  Object.entries(wins).forEach(([k, v]) => v.task.classList.toggle('active', k === id));
+}
+function minimizeWindow(id) {
+  const w = wins[id]; if (!w) return;
+  w.minimized = true;
+  w.el.style.display = 'none';
+  w.task.classList.remove('active');
+}
+function closeWindow(id) {
+  const w = wins[id]; if (!w) return;
+  if (typeof w.onClose === 'function') { try { w.onClose(); } catch(e){ console.warn(e); } }
+  w.el.remove(); w.task.remove();
+  delete wins[id];
+}
+
+/* =========================================================
+   GoloNET
+   ========================================================= */
+const DEFAULT_DOCS = [
+  { id: 'd1', cat: 'Регламент', title: 'Общий регламент МТО',
+    body: '1. Каждый боец обязан знать устав и регламент подразделения.\n2. Информация, полученная через GoloNET, не подлежит разглашению.\n3. При обнаружении утечки данных — немедленно доложить командиру.\n4. Использование терминала в личных целях допускается в свободное от службы время.\n5. Любые рапорты подаются через REX401.' },
+  { id: 'd2', cat: 'Регламент', title: 'Правила подачи рапортов через REX401',
+    body: '— Рапорт подаётся через форму Google Forms (кнопка в REX401).\n— Инвентарные описи подаются не позднее 24 часов после смены.\n— Боевые рапорты — в течение 6 часов после операции.\n— Рапорты о повреждениях — немедленно.\n— Запросы снабжения — за 48 часов.' },
+  { id: 'd3', cat: 'Шаблоны', title: 'Инвентарная опись — образец',
+    body: 'ОБЪЕКТ: <название>\nДАТА: <дд.мм.гггг>\n\n1. Бластерные винтовки DC-15A — 12 шт. (исправны)\n2. Бластерные пистолеты DC-17 — 8 шт. (исправны)\n3. Термо-детонаторы — 40 шт.\n4. Медицинские наборы — 6 шт.\n5. Ремкомплекты — 4 шт.\n\nПРИМЕЧАНИЕ: <текст>\nОТВЕТСТВЕННЫЙ: <позывной>' },
+  { id: 'd4', cat: 'Контакты', title: 'Контактные данные штаба',
+    body: 'Командир батальона: CT-7567 «Рекс» — канал 7-A\nСвязь с командованием: генерал-джедай Кеноби — канал 1-H\nМедицинский отсек: канал 3-MED\nИнженерная служба: канал 9-ENG\n\nПрямая линия GoloNET: всегда доступна.' },
+  { id: 'd5', cat: 'Кодекс', title: 'Кодекс Республики — выдержки',
+    body: '«Республика стоит на страже мира и порядка во всей Галактике.»\n\nСтатья 1. Гражданин обязан соблюдать законы Республики.\nСтатья 2. Силы Республики защищают граждан от внешних и внутренних угроз.\nСтатья 3. Информация, касающаяся безопасности Республики, является конфиденциальной.' },
+  { id: 'd6', cat: 'Снабжение', title: 'Типовой список снабжения отряда',
+    body: 'Боекомплект:\n— Патроны к DC-15A: 600\n— Патроны к DC-17: 300\n— Термо-детонаторы: 40\n\nПродовольствие:\n— Рационы: 120\n— Вода: 200 л\n\nМедицина:\n— Бакта-пластыри: 30\n— Колхицин: 20' },
+  { id: 'd7', cat: 'Техника', title: 'Регламент обслуживания LAAT/i',
+    body: '— Ежедневный осмотр корпуса — перед вылетом.\n— Проверка двигателей — каждые 50 часов.\n— Замена охлаждающей жидкости — каждые 200 часов.\n— Полное ТО — каждые 1000 часов.\n— При обнаружении повреждений — немедленный доклад инженеру.' },
+  { id: 'd8', cat: 'Общее', title: 'Инструкция по использованию терминала',
+    body: '— Терминал GAR-TAC — основной инструмент связи.\n— GoloNET — справочная система.\n— REX401 — подача рапортов через Google Forms.\n— 1C:Предприятие — финансы и биржа.\n— В свободное время разрешены игры (Сапёр, Косынка).' }
+];
+
+function openGoloNET() {
+  let docs = store.get('golonet_docs', DEFAULT_DOCS);
+  let selectedId = null, searchQuery = '';
+  const win = createWindow({ title: 'GoloNET // Информационная сеть', width: 760, height: 520 });
+  const body = win.body;
+
+  body.innerHTML = `
+    <div class="golo-header">
+      <input class="golo-search" type="text" placeholder="// Поиск по базе данных МТО...">
+    </div>
+    <div class="golo-content">
+      <div class="golo-list"></div>
+      <div class="golo-reader"></div>
+    </div>`;
+
+  const listEl   = body.querySelector('.golo-list');
+  const readerEl = body.querySelector('.golo-reader');
+  const searchEl = body.querySelector('.golo-search');
+
+  function renderList() {
+    const q = searchQuery.toLowerCase();
+    const filtered = docs.filter(d =>
+      !q || (d.title||'').toLowerCase().includes(q) ||
+      (d.body||'').toLowerCase().includes(q) ||
+      (d.cat||'').toLowerCase().includes(q));
+    if (!filtered.length) {
+      listEl.innerHTML = '<div style="padding:10px;color:#4ea8d6;font-size:11px;">// нет результатов</div>';
+      return;
+    }
+    listEl.innerHTML = filtered.map(d => `
+      <div class="golo-item ${d.id===selectedId?'active':''}" data-id="${d.id}">
+        <div class="cat">${escapeHTML(d.cat || '')}</div>
+        <div>${escapeHTML(d.title || '')}</div>
+      </div>`).join('');
+    listEl.querySelectorAll('.golo-item').forEach(el => {
+      el.onclick = () => { selectedId = el.dataset.id; renderList(); renderReader(); };
+    });
+  }
+
+  function renderReader() {
+    if (!selectedId) {
+      readerEl.innerHTML = '<div style="color:#4ea8d6;">// выберите документ слева</div>';
+      return;
+    }
+    const d = docs.find(x => x.id === selectedId);
+    if (!d) { readerEl.innerHTML = '<div style="color:#4ea8d6;">// документ не найден</div>'; return; }
+    readerEl.innerHTML = `
+      <div style="color:#4ea8d6;font-size:10px;letter-spacing:2px;">${escapeHTML((d.cat||'').toUpperCase())}</div>
+      <h2>${escapeHTML(d.title || '')}</h2>
+      <div class="body">${escapeHTML(d.body || '')}</div>`;
+  }
+
+  searchEl.oninput = () => { searchQuery = searchEl.value; renderList(); };
+
+  renderList(); renderReader();
+}
+
+/* =========================================================
+   REX401
+   ========================================================= */
+const REX_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdp_rYey6WrLXN2UWrMNOn9Vm6k9xv4X-BNYP4FGgnIztgfVA/viewform?usp=dialog';
+
+function openRex401() {
+  const win = createWindow({ title: 'REX401 // Система докладов', width: 900, height: 600 });
+  const body = win.body;
+  body.style.padding = '0';
+  body.style.overflow = 'hidden';
+  body.innerHTML = `<iframe class="rex-frame" src="${REX_FORM_URL}" allowfullscreen></iframe>`;
+}
+
+/* =========================================================
+   1C: Предприятие — точечное обновление, без перезапуска тикера
+   ========================================================= */
+const FIN_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1Cv27Zx93uyEt0kY2uzQW4xcMCygAJArFuqE24l6z-ms/edit?gid=0#gid=0';
+
+const FIN_ITEMS = [
+  { cat: 'Техника', name: 'AT-TE Walker', price: 1250000 },
+  { cat: 'Техника', name: 'LAAT/i Gunship', price: 850000 },
+  { cat: 'Техника', name: 'TX-130 Saber', price: 320000 },
+  { cat: 'Техника', name: 'AT-RT Walker', price: 145000 },
+  { cat: 'Техника', name: 'BARC Speeder', price: 78000 },
+  { cat: 'Техника', name: 'ARC-170 Fighter', price: 1850000 },
+  { cat: 'Техника', name: 'V-19 Torrent', price: 960000 },
+  { cat: 'Техника', name: 'Y-Wing Bomber', price: 1450000 },
+  { cat: 'Продовольствие', name: 'Рацион (1 шт)', price: 45 },
+  { cat: 'Продовольствие', name: 'Питьевая вода (1 л)', price: 12 },
+  { cat: 'Продовольствие', name: 'Белковый батончик', price: 18 },
+  { cat: 'Продовольствие', name: 'Пищевой концентрат (10 шт)', price: 340 },
+  { cat: 'Снаряжение', name: 'Броня штурмовика', price: 4500 },
+  { cat: 'Снаряжение', name: 'Шлем штурмовика', price: 1200 },
+  { cat: 'Снаряжение', name: 'Термо-детонатор', price: 350 },
+  { cat: 'Снаряжение', name: 'Датчик движения', price: 780 },
+  { cat: 'Снаряжение', name: 'Комлинк', price: 560 },
+  { cat: 'Снаряжение', name: 'Био-чип', price: 2200 },
+  { cat: 'ГСМ', name: 'Топливо (1 т)', price: 8900 },
+  { cat: 'ГСМ', name: 'Смазка (1 л)', price: 240 },
+  { cat: 'ГСМ', name: 'Охлаждающая жидкость (1 л)', price: 380 },
+  { cat: 'ГСМ', name: 'Реактивное топливо (1 т)', price: 15600 },
+  { cat: 'Инженерия', name: 'Ремкомплект', price: 890 },
+  { cat: 'Инженерия', name: 'Плазменный резак', price: 1450 },
+  { cat: 'Инженерия', name: 'Диагностический набор', price: 2300 },
+  { cat: 'Инженерия', name: 'Генератор', price: 5600 },
+  { cat: 'Инженерия', name: 'Гидравлический привод', price: 3200 },
+  { cat: 'Медицина', name: 'Бакта-пластырь', price: 180 },
+  { cat: 'Медицина', name: 'Колхицин', price: 340 },
+  { cat: 'Медицина', name: 'Медицинский набор', price: 1250 },
+  { cat: 'Медицина', name: 'Бакта-камера (сеанс)', price: 4500 },
+  { cat: 'Медицина', name: 'Стимулятор', price: 95 },
+  { cat: 'Оружие', name: 'DC-15A Blaster', price: 1200 },
+  { cat: 'Оружие', name: 'DC-17 Pistol', price: 780 },
+  { cat: 'Оружие', name: 'DC-15S Carbine', price: 950 },
+  { cat: 'Оружие', name: 'Z-6 Rotary', price: 4800 },
+  { cat: 'Оружие', name: 'Ракетница', price: 3200 },
+  { cat: 'Оружие', name: 'Снайперская винтовка', price: 2600 },
+  { cat: 'Оружие', name: 'ЭМИ-граната', price: 620 }
+];
+
+const finPrices = FIN_ITEMS.map((item, i) => ({ ...item, idx: i, cur: item.price, prev: item.price, delta: 0 }));
+
+let finTickInterval = null;
+let finTicks = 0;
+
+function finUpdatePrices() {
+  finTicks++;
+  finPrices.forEach(p => {
+    if (Math.random() < 0.35) {
+      const change = 1 + (Math.random() - 0.5) * 0.06;
+      p.prev = p.cur;
+      p.cur = Math.round(p.cur * change);
+      p.delta = p.cur - p.prev;
+    }
+  });
+}
+
+function finFmt(num) {
+  return num.toLocaleString('ru-RU') + ' кр.';
+}
+
+function priceInfo(p) {
+  let cls = 'fin-flat', arrow = '●';
+  if (p.delta > 0) { cls = 'fin-up'; arrow = '▲'; }
+  else if (p.delta < 0) { cls = 'fin-down'; arrow = '▼'; }
+  return { cls, arrow };
+}
+
+function openFinance() {
+  if (finTickInterval) { clearInterval(finTickInterval); finTickInterval = null; }
+  const win = createWindow({
+    title: '1C:Предприятие // Финансы',
+    width: 1000, height: 640,
+    onClose: () => { if (finTickInterval) { clearInterval(finTickInterval); finTickInterval = null; } }
+  });
+  const body = win.body;
+  body.style.padding = '10px';
+  body.style.overflow = 'hidden';
+
+  body.innerHTML = `
+    <div class="fin-tabs">
+      <button data-tab="exchange" class="active">БИРЖА</button>
+      <button data-tab="sheets">ФИНАНСОВАЯ ТАБЛИЦА</button>
+    </div>
+    <div class="fin-body"></div>`;
+
+  const tabsEl = body.querySelectorAll('.fin-tabs button');
+  const bodyEl = body.querySelector('.fin-body');
+
+  function buildExchangeDOM() {
+    // Тикер: две одинаковые копии — анимация translateX(-50%) даст идеальный цикл
+    const half = finPrices.map(p => {
+      const { cls, arrow } = priceInfo(p);
+      return `<span class="fin-tick-item" data-tick-idx="${p.idx}">
+        <span class="fin-tick-name">${escapeHTML(p.name)}</span>
+        <span class="fin-tick-price ${cls}">${arrow} ${finFmt(p.cur)}</span>
+      </span>`;
+    }).join('');
+
+    // Таблица по категориям
+    const cats = {};
+    finPrices.forEach(p => { (cats[p.cat] = cats[p.cat] || []).push(p); });
+    const table = Object.entries(cats).map(([cat, items]) => {
+      const rows = items.map(p => {
+        const { cls, arrow } = priceInfo(p);
+        return `<tr>
+          <td>${escapeHTML(p.name)}</td>
+          <td class="${cls}" data-price-idx="${p.idx}">${arrow} ${finFmt(p.cur)}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="fin-category"><div class="fin-cat-title">${escapeHTML(cat)}</div><table class="fin-table">${rows}</table></div>`;
+    }).join('');
+
+    bodyEl.innerHTML = `
+      <div class="fin-ticker-bar">
+        <div class="fin-ticker-track">${half}${half}</div>
+      </div>
+      <div class="fin-grid-wrap">${table}</div>
+      <div class="fin-footer">ТАКТ: <span class="fin-tick-counter">${finTicks}</span> · обновление каждые 4 сек · цены в кредитах Республики</div>
+    `;
+  }
+
+  function updatePricesOnly() {
+    finUpdatePrices();
+
+    // Обновляем только текст цен в таблице (без пересоздания DOM → скролл сохраняется)
+    bodyEl.querySelectorAll('[data-price-idx]').forEach(el => {
+      const idx = +el.dataset.priceIdx;
+      const p = finPrices[idx];
+      const { cls, arrow } = priceInfo(p);
+      el.textContent = `${arrow} ${finFmt(p.cur)}`;
+      el.className = cls;
+    });
+
+    // Обновляем только цены в тикере (две копии → data-tick-idx)
+    bodyEl.querySelectorAll('[data-tick-idx] .fin-tick-price').forEach(el => {
+      const wrap = el.parentElement;
+      const idx = +wrap.dataset.tickIdx;
+      const p = finPrices[idx];
+      const { cls, arrow } = priceInfo(p);
+      el.textContent = `${arrow} ${finFmt(p.cur)}`;
+      el.className = 'fin-tick-price ' + cls;
+    });
+
+    const counter = bodyEl.querySelector('.fin-tick-counter');
+    if (counter) counter.textContent = finTicks;
+  }
+
+  function renderSheets() {
+    bodyEl.innerHTML = `<iframe class="fin-iframe" src="${FIN_SHEETS_URL}" allowfullscreen></iframe>`;
+  }
+
+  function activateTab(tab) {
+    tabsEl.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    if (tab === 'exchange') {
+      buildExchangeDOM();
+      finTickInterval = setInterval(() => {
+        if (!document.body.contains(win.el)) { clearInterval(finTickInterval); return; }
+        updatePricesOnly();
+      }, 4000);
+    } else {
+      if (finTickInterval) { clearInterval(finTickInterval); finTickInterval = null; }
+      renderSheets();
+    }
+  }
+
+  tabsEl.forEach(t => t.onclick = () => activateTab(t.dataset.tab));
+  activateTab('exchange');
+}
+
+/* =========================================================
+   MINESWEEPER — полностью рабочий
+   ========================================================= */
+function openMinesweeper() {
+  const win = createWindow({ title: 'Сапёр // CX-9', width: 360, height: 440 });
+  const SIZE = 9, MINES = 10;
+  let grid, revealed, flagged, gameOver, won, firstClick, minesLeft, seconds, timerInterval, startTime;
+
+  function init() {
+    grid = Array(SIZE).fill().map(() => Array(SIZE).fill(0));
+    revealed = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
+    flagged  = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
+    gameOver = false; won = false; firstClick = true;
+    minesLeft = MINES; seconds = 0; startTime = null;
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    render();
+  }
+
+  function placeMines(safeR, safeC) {
+    let placed = 0;
+    while (placed < MINES) {
+      const r = Math.floor(Math.random()*SIZE), c = Math.floor(Math.random()*SIZE);
+      if (grid[r][c] === -1) continue;
+      // Первый клик никогда не попадает на мину (и на соседей тоже)
+      if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+      grid[r][c] = -1; placed++;
+    }
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      if (grid[r][c] === -1) continue;
+      let n = 0;
+      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+        const nr=r+dr, nc=c+dc;
+        if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&grid[nr][nc]===-1) n++;
+      }
+      grid[r][c] = n;
+    }
+  }
+
+  function startTimer() {
+    if (timerInterval) return;
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+      seconds = Math.floor((Date.now() - startTime) / 1000);
+      const el = win.body.querySelector('.ms-time');
+      if (el) el.textContent = seconds;
+    }, 250);
+  }
+
+  function reveal(r, c) {
+    if (gameOver || won || revealed[r][c] || flagged[r][c]) return;
+    if (firstClick) {
+      placeMines(r, c);
+      firstClick = false;
+      startTimer();
+    }
+    if (grid[r][c] === -1) {
+      gameOver = true;
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      // Открываем все мины
+      for (let rr=0;rr<SIZE;rr++) for (let cc=0;cc<SIZE;cc++) {
+        if (grid[rr][cc] === -1) revealed[rr][cc] = true;
+      }
+      revealed[r][c] = 'boom';
+      render();
+      return;
+    }
+    revealed[r][c] = true;
+    if (grid[r][c] === 0) {
+      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+        const nr=r+dr, nc=c+dc;
+        if (nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&!revealed[nr][nc]&&!flagged[nr][nc]) {
+          reveal(nr, nc);
+        }
+      }
+    }
+    checkWin();
+    render();
+  }
+
+  function toggleFlag(r, c) {
+    if (gameOver || won || revealed[r][c]) return;
+    flagged[r][c] = !flagged[r][c];
+    minesLeft = MINES - flagged.flat().filter(Boolean).length;
+    render();
+  }
+
+  function checkWin() {
+    let cnt = 0;
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (revealed[r][c]) cnt++;
+    if (cnt === SIZE*SIZE - MINES) {
+      won = true;
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      // Автофлаги на все мины
+      for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+        if (grid[r][c] === -1) flagged[r][c] = true;
+      }
+      minesLeft = 0;
+    }
+  }
+
+  function render() {
+    let html = `<div class="ms-wrap">
+      <div class="ms-hud">
+        <span>МИН: <b>${minesLeft}</b></span>
+        <span>ВРЕМЯ: <b class="ms-time">${seconds}</b></span>
+        <span style="color:${gameOver && !won ? '#ff6b6b' : won ? '#4eff7a' : '#7fdcff'}">
+          ${won ? 'ПОБЕДА' : gameOver ? 'ПРОВАЛ' : 'В БОЮ'}
+        </span>
+      </div>
+      <div class="ms-grid" style="grid-template-columns:repeat(${SIZE},1fr)">`;
+
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+      let cls = 'ms-cell', txt = '';
+      if (revealed[r][c] === 'boom') { cls += ' revealed mine boom'; txt = '💥'; }
+      else if (revealed[r][c]) {
+        cls += ' revealed';
+        if (grid[r][c] === -1) { txt = '💥'; cls += ' mine'; }
+        else if (grid[r][c] > 0) { txt = grid[r][c]; cls += ' n' + grid[r][c]; }
+      } else if (flagged[r][c]) { txt = '🚩'; cls += ' flag'; }
+      html += `<div class="${cls}" data-r="${r}" data-c="${c}">${txt}</div>`;
+    }
+    html += `</div><button class="ms-reset">НОВАЯ ИГРА</button></div>`;
+    win.body.innerHTML = html;
+
+    win.body.querySelectorAll('.ms-cell').forEach(cell => {
+      cell.onclick = () => {
+        const r = +cell.dataset.r, c = +cell.dataset.c;
+        reveal(r, c);
+      };
+      cell.oncontextmenu = (e) => {
+        e.preventDefault();
+        const r = +cell.dataset.r, c = +cell.dataset.c;
+        toggleFlag(r, c);
+      };
+    });
+    win.body.querySelector('.ms-reset').onclick = init;
+  }
+
+  init();
+  win.onClose = () => { if (timerInterval) clearInterval(timerInterval); };
+}
+
+/* =========================================================
+   SOLITAIRE — полностью рабочий
+   ========================================================= */
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const isRed = s => s === '♥' || s === '♦';
+
+function openSolitaire() {
+  const win = createWindow({ title: 'Косынка // Голографический пасьянс', width: 780, height: 620 });
+  let state, selected = null;
+
+  function newGame() {
+    const deck = [];
+    for (const s of SUITS) for (let r = 0; r < 13; r++) deck.push({ s, r, up: false });
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    state = { stock: [], waste: [], foundations: [[],[],[],[]], tableau: [[],[],[],[],[],[],[]] };
+    for (let i = 0; i < 7; i++) {
+      for (let j = i; j < 7; j++) {
+        const card = deck.pop();
+        if (j === i) card.up = true;
+        state.tableau[j].push(card);
+      }
+    }
+    while (deck.length) state.stock.push(deck.pop());
+    selected = null;
+    render();
+  }
+
+  function cardHTML(card, extraClass = '', cardIdx = 0) {
+    const red = isRed(card.s) ? 'red' : 'black';
+    const cls = `sol-card ${red} ${card.up ? '' : 'back'} ${extraClass}`;
+    // Отступ по вертикали для карт в столбце
+    const offset = cardIdx * 22;
+    const style = cardIdx > 0 ? `style="top:${offset}px"` : '';
+    return `<div class="${cls}" ${style}>
+      <span class="sol-rank">${card.up ? RANKS[card.r] : ''}</span>
+      <span class="sol-suit">${card.up ? card.s : ''}</span>
+    </div>`;
+  }
+
+  function render() {
+    let html = `<div class="sol-wrap"><div class="sol-top">`;
+    // Колода (закрытая) и сброс
+    html += `<div class="sol-pile sol-stock ${state.stock.length ? '' : 'empty'}" data-pile="stock">${state.stock.length ? '🂠' : '↻'}</div>`;
+    html += `<div class="sol-pile" data-pile="waste" style="margin-left:8px;padding:0">`;
+    const w = state.waste[state.waste.length - 1];
+    if (w) {
+      const sel = selected && selected.pile === 'waste' ? 'sel' : '';
+      html += `<div class="sol-card ${isRed(w.s)?'red':'black'} ${sel}" style="position:absolute;left:0;top:0">
+        <span class="sol-rank">${RANKS[w.r]}</span><span class="sol-suit">${w.s}</span>
+      </div>`;
+    }
+    html += `</div>`;
+    // Дом (foundations) — 4 ячейки
+    for (let i = 0; i < 4; i++) {
+      html += `<div class="sol-pile" data-pile="foundation" data-idx="${i}" style="padding:0">`;
+      const f = state.foundations[i];
+      if (f.length) {
+        const top = f[f.length - 1];
+        const sel = selected && selected.pile === 'foundation' && selected.idx === i ? 'sel' : '';
+        html += `<div class="sol-card ${isRed(top.s)?'red':'black'} ${sel}" style="position:absolute;left:0;top:0">
+          <span class="sol-rank">${RANKS[top.r]}</span><span class="sol-suit">${top.s}</span>
+        </div>`;
+      } else {
+        html += `<span class="sol-empty">${SUITS[i]}</span>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div><div class="sol-bottom">`;
+
+    // 7 столбцов
+    for (let i = 0; i < 7; i++) {
+      html += `<div class="sol-tab" data-pile="tableau" data-idx="${i}">`;
+      state.tableau[i].forEach((card, ci) => {
+        const isSel = selected && selected.pile === 'tableau' && selected.idx === i && ci >= selected.cardIdx;
+        const extra = isSel ? 'sel' : (card.up ? 'top' : '');
+        // Верхняя карта столбца — без offset, остальные с отступом
+        const isTop = ci === state.tableau[i].length - 1;
+        const style = `style="top:${ci * 22}px;${isTop ? 'z-index:10;' : ''}"`;
+        const cls = `sol-card ${isRed(card.s)?'red':'black'} ${card.up ? '' : 'back'} ${extra}`;
+        html += `<div class="${cls}" ${style} data-card-idx="${ci}">
+          <span class="sol-rank">${card.up ? RANKS[card.r] : ''}</span>
+          <span class="sol-suit">${card.up ? card.s : ''}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+    win.body.innerHTML = html;
+    bind();
+  }
+
+  function bind() {
+    // Клик по колоде
+    const stock = win.body.querySelector('[data-pile="stock"]');
+    if (stock) stock.onclick = drawStock;
+
+    // Клик по всем картам и пустым колонкам
+    win.body.querySelectorAll('.sol-card').forEach(cardEl => {
+      cardEl.onclick = (e) => {
+        e.stopPropagation();
+        const pileEl = cardEl.closest('[data-pile]');
+        if (!pileEl) return;
+        const pile = pileEl.dataset.pile;
+        const idx  = pileEl.dataset.idx !== undefined ? +pileEl.dataset.idx : undefined;
+        const ci   = +cardEl.dataset.cardIdx;
+
+        if (pile === 'stock') { drawStock(); return; }
+        if (pile === 'waste') {
+          if (selected) tryMoveTo('waste');
+          else selected = { pile: 'waste' };
+          render(); return;
+        }
+        if (pile === 'foundation') {
+          if (selected) tryMoveTo('foundation', idx);
+          else selected = { pile: 'foundation', idx };
+          render(); return;
+        }
+        if (pile === 'tableau') {
+          const card = state.tableau[idx][ci];
+          if (selected) { tryMoveTo('tableau', idx); return; }
+          if (!card.up) return;
+          selected = { pile: 'tableau', idx, cardIdx: ci };
+          render();
+        }
+      };
+    });
+
+    // Клик по пустым столбцам / пустым foundations
+    win.body.querySelectorAll('.sol-tab, .sol-pile[data-pile="foundation"]').forEach(pileEl => {
+      const pile = pileEl.dataset.pile;
+      const idx  = pileEl.dataset.idx !== undefined ? +pileEl.dataset.idx : undefined;
+      // Не перебиваем клик по карте
+      pileEl.addEventListener('click', (e) => {
+        if (e.target.classList.contains('sol-card')) return;
+        if (!selected) return;
+        if (pile === 'tableau') tryMoveTo('tableau', idx);
+        else if (pile === 'foundation') tryMoveTo('foundation', idx);
+      });
+    });
+  }
+
+  function drawStock() {
+    if (!state.stock.length) {
+      // Возвращаем сброс обратно в колоду
+      while (state.waste.length) {
+        const c = state.waste.pop();
+        c.up = false;
+        state.stock.push(c);
+      }
+    } else {
+      const c = state.stock.pop();
+      c.up = true;
+      state.waste.push(c);
+    }
+    selected = null;
+    render();
+  }
+
+  function canPlaceOnTableau(card, targetPile) {
+    if (!targetPile.length) return card.r === 12; // только король на пустой столбец
+    const top = targetPile[targetPile.length - 1];
+    if (!top.up) return false;
+    return (top.r === card.r + 1) && (isRed(top.s) !== isRed(card.s));
+  }
+
+  function canPlaceOnFoundation(card, foundationIdx) {
+    const pile = state.foundations[foundationIdx];
+    if (!pile.length) return card.r === 0 && card.s === SUITS[foundationIdx];
+    const top = pile[pile.length - 1];
+    return top.s === card.s && top.r === card.r - 1;
+  }
+
+  function tryMoveTo(targetPile, targetIdx) {
+    if (!selected) return;
+    let cards = [];
+    if (selected.pile === 'waste') {
+      cards = [state.waste[state.waste.length - 1]];
+    } else if (selected.pile === 'tableau') {
+      cards = state.tableau[selected.idx].slice(selected.cardIdx);
+    } else if (selected.pile === 'foundation') {
+      const f = state.foundations[selected.idx];
+      cards = [f[f.length - 1]];
+    }
+    if (!cards.length) { selected = null; render(); return; }
+    const first = cards[0];
+
+    if (targetPile === 'tableau') {
+      if (canPlaceOnTableau(first, state.tableau[targetIdx])) {
+        removeSelectedCards();
+        state.tableau[targetIdx].push(...cards);
+        flipNewTop(selected.pile, selected.idx);
+        selected = null; render(); return;
+      }
+    } else if (targetPile === 'foundation') {
+      if (cards.length !== 1) { selected = null; render(); return; }
+      if (canPlaceOnFoundation(first, targetIdx)) {
+        removeSelectedCards();
+        state.foundations[targetIdx].push(first);
+        flipNewTop(selected.pile, selected.idx);
+        selected = null; render(); return;
+      }
+    }
+    selected = null; render();
+  }
+
+  function removeSelectedCards() {
+    if (selected.pile === 'waste') state.waste.pop();
+    else if (selected.pile === 'tableau') state.tableau[selected.idx].splice(selected.cardIdx);
+    else if (selected.pile === 'foundation') state.foundations[selected.idx].pop();
+  }
+
+  function flipNewTop(pile, idx) {
+    if (pile === 'tableau') {
+      const t = state.tableau[idx];
+      if (t.length && !t[t.length - 1].up) t[t.length - 1].up = true;
+    }
+  }
+
+  newGame();
+}
+
+/* =========================================================
+   CALCULATOR
+   ========================================================= */
+function openCalculator() {
+  const win = createWindow({ title: 'Калькулятор', width: 280, height: 360 });
+  win.body.innerHTML = `<div class="calc">
+    <input class="calc-display" readonly value="0">
+    <div class="calc-grid">${['C','±','%','/','7','8','9','*','4','5','6','-','1','2','3','+','0','.','='].map(k => `<button data-k="${k}">${k}</button>`).join('')}</div>
+  </div>`;
+  let expr = '0';
+  const display = win.body.querySelector('.calc-display');
+  const update = () => display.value = expr;
+  win.body.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => {
+      const k = btn.dataset.k;
+      if (k === 'C') { expr = '0'; update(); return; }
+      if (k === '=') { try { const safe = expr.replace(/[^0-9+\-*/.]/g, ''); const res = Function('"use strict";return (' + safe + ')')(); expr = String(res); } catch(e) { expr = 'ОШИБКА'; } update(); return; }
+      if (k === '±') { if (expr.startsWith('-')) expr = expr.slice(1); else if (expr !== '0') expr = '-' + expr; update(); return; }
+      if (k === '%') { expr = String(parseFloat(expr) / 100); update(); return; }
+      if (expr === '0' && /[0-9.]/.test(k)) expr = k; else expr += k;
+      update();
+    };
+  });
+}
+
+/* =========================================================
+   NOTEPAD
+   ========================================================= */
+function openNotepad() {
+  const win = createWindow({ title: 'Блокнот', width: 480, height: 400 });
+  win.body.innerHTML = `<div class="note">
+    <textarea class="note-area"></textarea>
+    <div class="note-bar"><button class="note-save">СОХРАНИТЬ</button><span class="note-status"></span></div>
+  </div>`;
+  const area = win.body.querySelector('.note-area');
+  area.value = store.get('notepad_text', '// Добро пожаловать в терминал.\n');
+  win.body.querySelector('.note-save').onclick = () => {
+    store.set('notepad_text', area.value);
+    win.body.querySelector('.note-status').textContent = '✓ сохранено ' + new Date().toLocaleTimeString('ru-RU');
+  };
+}
+
+/* =========================================================
+   MY COMPUTER — только 3 программы
+   ========================================================= */
+function openComputer() {
+  const win = createWindow({ title: 'Мой компьютер', width: 600, height: 340 });
+  win.body.style.padding = '0';
+  win.body.innerHTML = `
+    <div class="mc-grid">
+      <div class="mc-tile" data-open="golonet">
+        <span class="mc-icon">📡</span>
+        <span class="mc-label">GoloNET</span>
+      </div>
+      <div class="mc-tile" data-open="rex401">
+        <span class="mc-icon">📋</span>
+        <span class="mc-label">REX401</span>
+      </div>
+      <div class="mc-tile" data-open="finance">
+        <span class="mc-icon">💰</span>
+        <span class="mc-label">1C:Предприятие</span>
+      </div>
+    </div>`;
+  win.body.querySelectorAll('.mc-tile').forEach(tile => {
+    tile.onclick = () => {
+      const key = tile.dataset.open;
+      if (APPS[key]) APPS[key].open();
+    };
+  });
+}
+
+/* =========================================================
+   RECYCLE BIN — удаление/восстановление программ
+   ========================================================= */
+function getRemovedApps() { return store.get('removed_apps', []); }
+function setRemovedApps(list) { store.set('removed_apps', list); }
+
+function openRecycle() {
+  const win = createWindow({ title: 'Корзина', width: 560, height: 480 });
+  const body = win.body;
+
+  function render() {
+    const removed = getRemovedApps();
+    if (!removed.length) {
+      body.innerHTML = `
+        <div class="recycle-actions">
+          <button id="restore-all">↺ ВОССТАНОВИТЬ ВСЕ ЯРЛЫКИ</button>
+        </div>
+        <div class="recycle-hint">// корзина пуста — все программы на рабочем столе</div>
+        <div class="recycle-empty">Удалённых программ нет.<br>Чтобы удалить программу с рабочего стола —<br>нажмите правой кнопкой мыши по её ярлыку.</div>`;
+      body.querySelector('#restore-all').onclick = () => {
+        setRemovedApps([]);
+        renderIcons();
+        renderStartMenu();
+        render();
+      };
+      return;
+    }
+
+    const items = removed.map(key => {
+      const app = APPS[key];
+      if (!app) return '';
+      return `<div class="recycle-item">
+        <span class="r-icon">${app.glyph}</span>
+        <div class="r-info">
+          <div class="r-name">${escapeHTML(app.name)}</div>
+          <div class="r-meta">// удалено с рабочего стола</div>
+        </div>
+        <button class="r-btn" data-restore="${key}">ВОССТАНОВИТЬ</button>
+      </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="recycle-actions">
+        <button id="restore-all">↺ ВОССТАНОВИТЬ ВСЕ</button>
+      </div>
+      <div class="recycle-hint">// удалённые программы (${removed.length})</div>
+      ${items}`;
+
+    body.querySelector('#restore-all').onclick = () => {
+      setRemovedApps([]);
+      renderIcons();
+      renderStartMenu();
+      render();
+    };
+    body.querySelectorAll('[data-restore]').forEach(btn => {
+      btn.onclick = () => {
+        const key = btn.dataset.restore;
+        const list = getRemovedApps().filter(k => k !== key);
+        setRemovedApps(list);
+        renderIcons();
+        renderStartMenu();
+        render();
+      };
+    });
+  }
+
+  render();
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function openSettings() {
+  const win = createWindow({ title: 'Настройки', width: 440, height: 440 });
+  win.body.innerHTML = `<div class="settings">
+    <div class="settings-label">// ОБОИ</div>
+    <div class="settings-grid">
+      ${Object.entries(WALLPAPERS).map(([k,v]) => `
+        <button class="wp-btn" data-key="${k}">
+          <div class="wp-preview" style="background:${v.css}"></div>
+          <span>${v.name}</span>
+        </button>`).join('')}
+    </div>
+    <div class="settings-label" style="margin-top:20px;">// РАБОЧИЙ СТОЛ</div>
+    <button class="golo-btn" style="width:100%;padding:8px;" id="reset-icons">↺ СБРОСИТЬ ЯРЛЫКИ</button>
+  </div>`;
+  win.body.querySelectorAll('.wp-btn').forEach(b => b.onclick = () => applyWallpaper(b.dataset.key));
+  win.body.querySelector('#reset-icons').onclick = () => { if (confirm('Вернуть ярлыки?')) resetIconPositions(); };
+}
+
+/* =========================================================
+   APP REGISTRY
+   ========================================================= */
+const APPS = {
+  golonet:   { name: 'GoloNET',       glyph: '📡', open: openGoloNET },
+  rex401:    { name: 'REX401',        glyph: '📋', open: openRex401 },
+  finance:   { name: '1C:Предприятие',glyph: '💰', open: openFinance },
+  mine:      { name: 'Сапёр',         glyph: '💣', open: openMinesweeper },
+  solitaire: { name: 'Косынка',       glyph: '🂡', open: openSolitaire },
+  calc:      { name: 'Калькулятор',   glyph: '🧮', open: openCalculator },
+  notepad:   { name: 'Блокнот',       glyph: '📝', open: openNotepad },
+  computer:  { name: 'Мой компьютер', glyph: '💾', open: openComputer },
+  recycle:   { name: 'Корзина',       glyph: '🗑️', open: openRecycle },
+  settings:  { name: 'Настройки',     glyph: '⚙️', open: openSettings }
+};
+const ALL_DESKTOP_APPS = ['golonet','rex401','finance','mine','solitaire','calc','notepad','computer','recycle','settings'];
+
+function getVisibleApps() {
+  const removed = getRemovedApps();
+  return ALL_DESKTOP_APPS.filter(k => !removed.includes(k));
+}
+
+/* =========================================================
+   ICON POSITIONS
+   ========================================================= */
+let iconPositions = null;
+function defaultIconPositions() {
+  const pos = {};
+  ALL_DESKTOP_APPS.forEach((key, i) => { pos[key] = { left: 20, top: 20 + i * 100 }; });
+  return pos;
+}
+function loadIconPositions() {
+  iconPositions = store.get('icon_positions', null);
+  if (!iconPositions || typeof iconPositions !== 'object') {
+    iconPositions = defaultIconPositions();
+    store.set('icon_positions', iconPositions);
+  }
+  ALL_DESKTOP_APPS.forEach((key, i) => {
+    if (!iconPositions[key]) iconPositions[key] = { left: 20, top: 20 + i * 100 };
+  });
+  return iconPositions;
+}
+function saveIconPositions() { store.set('icon_positions', iconPositions); }
+function resetIconPositions() {
+  iconPositions = defaultIconPositions();
+  saveIconPositions();
+  renderIcons();
+}
+function renderIcons() {
+  const container = document.getElementById('icons');
+  container.innerHTML = '';
+  if (!iconPositions) loadIconPositions();
+  const visible = getVisibleApps();
+  visible.forEach((key, i) => {
+    const app = APPS[key];
+    if (!app) return;
+    const pos = iconPositions[key] || { left: 20, top: 20 + i * 100 };
+    const el = document.createElement('div');
+    el.className = 'icon';
+    el.dataset.app = key;
+    el.style.left = pos.left + 'px';
+    el.style.top  = pos.top  + 'px';
+    el.innerHTML = `<span class="glyph">${app.glyph}</span><span class="label">${app.name}</span>`;
+    bindIconDrag(el, app, key);
+    container.appendChild(el);
+  });
+}
+function bindIconDrag(el, app, key) {
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0, moved = false, active = false;
+  el.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    active = true; moved = false;
+    startX = e.clientX; startY = e.clientY;
+    startLeft = parseInt(el.style.left) || 0;
+    startTop  = parseInt(el.style.top)  || 0;
+    el.style.zIndex = 9999;
+    const bounds = el.parentElement.getBoundingClientRect();
+    const iconW = el.offsetWidth, iconH = el.offsetHeight;
+    const move = (ev) => {
+      if (!active) return;
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      if (!moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) moved = true;
+      if (!moved) return;
+      el.style.left = Math.max(0, Math.min(bounds.width - iconW, startLeft + dx)) + 'px';
+      el.style.top = Math.max(0, Math.min(bounds.height - iconH, startTop + dy)) + 'px';
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      active = false; el.style.zIndex = '';
+      if (!moved) app.open();
+      else {
+        iconPositions[key] = { left: parseInt(el.style.left) || 0, top: parseInt(el.style.top) || 0 };
+        saveIconPositions();
+      }
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+
+  // ПКМ — удалить ярлык в корзину
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (!confirm(`Удалить ярлык "${app.name}" с рабочего стола?\n(Восстановить можно в Корзине)`)) return;
+    const removed = getRemovedApps();
+    if (!removed.includes(key)) removed.push(key);
+    setRemovedApps(removed);
+    renderIcons();
+    renderStartMenu();
+  });
+}
+
+function renderStartMenu() {
+  const menu = document.getElementById('startMenu');
+  menu.innerHTML = `<div class="menu-header">// ПРОГРАММЫ</div>`;
+  const visible = getVisibleApps();
+  visible.forEach(key => {
+    const app = APPS[key];
+    if (!app) return;
+    const el = document.createElement('div');
+    el.className = 'menu-item';
+    el.innerHTML = `<span class="glyph">${app.glyph}</span><span>${app.name}</span>`;
+    el.onclick = () => { app.open(); toggleStart(false); };
+    menu.appendChild(el);
+  });
+}
+function toggleStart(force) {
+  const menu = document.getElementById('startMenu');
+  const btn  = document.getElementById('startBtn');
+  const open = force !== undefined ? force : !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  btn.classList.toggle('active', open);
+}
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function showBootScreen() {
+  const b = document.createElement('div');
+  b.id = 'boot';
+  b.innerHTML = `
+    <div class="boot-lines">
+      <div>GAR-TAC CONSOLE OS v6.6</div>
+      <div>&gt; INITIALIZING...</div>
+      <div>&gt; GOLONET LINK: OK</div>
+      <div>&gt; REX401 UPLINK: OK</div>
+      <div>&gt; ACCESS GRANTED</div>
+    </div>`;
+  document.body.appendChild(b);
+  setTimeout(() => b.style.opacity = '0', 1500);
+  setTimeout(() => b.remove(), 2200);
+}
+
+/* =========================================================
+   BOOTSTRAP
+   ========================================================= */
+document.getElementById('startBtn').onclick = (e) => { e.stopPropagation(); toggleStart(); };
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('startMenu');
+  const btn  = document.getElementById('startBtn');
+  if (!menu.contains(e.target) && !btn.contains(e.target)) toggleStart(false);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleStart(false); });
+
+applyWallpaper(store.get('wallpaper', 'console'));
+renderIcons();
+renderStartMenu();
+updateClock();
+setInterval(updateClock, 1000);
+showBootScreen();
+</script>
+</body>
+</html>

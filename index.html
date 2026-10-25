@@ -115,7 +115,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Courier New',monos
 .sol-card.back .sol-rank,.sol-card.back .sol-suit{display:none}
 .sol-card.sel{box-shadow:0 0 0 2px #00d4ff,0 0 12px #00d4ff;z-index:100}
 .sol-card.top{box-shadow:0 0 8px rgba(0,212,255,.6)}
-.sol-status{color:#7fdcff;font-size:12px;text-align:center;letter-spacing:2px}
 .calc{display:flex;flex-direction:column;height:100%;gap:8px}
 .calc-display{width:100%;padding:10px;background:rgba(0,30,60,.9);border:1px solid #00d4ff;color:#7fdcff;font-size:22px;text-align:right;font-family:inherit;outline:none}
 .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;flex:1}
@@ -140,7 +139,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Courier New',monos
 .recycle-item .r-meta{font-size:10px;color:#4ea8d6;letter-spacing:1px}
 .recycle-item .r-btn{background:transparent;border:1px solid #00d4ff;color:#7fdcff;cursor:pointer;padding:4px 10px;border-radius:3px;font-family:inherit;font-size:10px}
 .recycle-item .r-btn:hover{background:#00d4ff;color:#000}
-.recycle-item .r-btn.danger:hover{background:#ff4a4a;border-color:#ff4a4a}
 .recycle-empty{text-align:center;padding:30px 10px;color:#4ea8d6;font-size:12px}
 .recycle-actions{display:flex;gap:8px;margin-bottom:10px}
 .recycle-actions button{flex:1;padding:8px;background:rgba(0,40,80,.8);border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
@@ -387,7 +385,7 @@ function openRex401() {
 }
 
 /* =========================================================
-   1C: Предприятие — точечное обновление, без перезапуска тикера
+   1C: Предприятие
    ========================================================= */
 const FIN_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1Cv27Zx93uyEt0kY2uzQW4xcMCygAJArFuqE24l6z-ms/edit?gid=0#gid=0';
 
@@ -483,7 +481,6 @@ function openFinance() {
   const bodyEl = body.querySelector('.fin-body');
 
   function buildExchangeDOM() {
-    // Тикер: две одинаковые копии — анимация translateX(-50%) даст идеальный цикл
     const half = finPrices.map(p => {
       const { cls, arrow } = priceInfo(p);
       return `<span class="fin-tick-item" data-tick-idx="${p.idx}">
@@ -492,7 +489,6 @@ function openFinance() {
       </span>`;
     }).join('');
 
-    // Таблица по категориям
     const cats = {};
     finPrices.forEach(p => { (cats[p.cat] = cats[p.cat] || []).push(p); });
     const table = Object.entries(cats).map(([cat, items]) => {
@@ -518,7 +514,6 @@ function openFinance() {
   function updatePricesOnly() {
     finUpdatePrices();
 
-    // Обновляем только текст цен в таблице (без пересоздания DOM → скролл сохраняется)
     bodyEl.querySelectorAll('[data-price-idx]').forEach(el => {
       const idx = +el.dataset.priceIdx;
       const p = finPrices[idx];
@@ -527,7 +522,6 @@ function openFinance() {
       el.className = cls;
     });
 
-    // Обновляем только цены в тикере (две копии → data-tick-idx)
     bodyEl.querySelectorAll('[data-tick-idx] .fin-tick-price').forEach(el => {
       const wrap = el.parentElement;
       const idx = +wrap.dataset.tickIdx;
@@ -564,7 +558,7 @@ function openFinance() {
 }
 
 /* =========================================================
-   MINESWEEPER — полностью рабочий
+   MINESWEEPER
    ========================================================= */
 function openMinesweeper() {
   const win = createWindow({ title: 'Сапёр // CX-9', width: 360, height: 440 });
@@ -587,7 +581,6 @@ function openMinesweeper() {
     while (placed < MINES) {
       const r = Math.floor(Math.random()*SIZE), c = Math.floor(Math.random()*SIZE);
       if (grid[r][c] === -1) continue;
-      // Первый клик никогда не попадает на мину (и на соседей тоже)
       if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
       grid[r][c] = -1; placed++;
     }
@@ -622,7 +615,6 @@ function openMinesweeper() {
     if (grid[r][c] === -1) {
       gameOver = true;
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-      // Открываем все мины
       for (let rr=0;rr<SIZE;rr++) for (let cc=0;cc<SIZE;cc++) {
         if (grid[rr][cc] === -1) revealed[rr][cc] = true;
       }
@@ -656,7 +648,6 @@ function openMinesweeper() {
     if (cnt === SIZE*SIZE - MINES) {
       won = true;
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-      // Автофлаги на все мины
       for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
         if (grid[r][c] === -1) flagged[r][c] = true;
       }
@@ -707,7 +698,7 @@ function openMinesweeper() {
 }
 
 /* =========================================================
-   SOLITAIRE — полностью рабочий
+   SOLITAIRE
    ========================================================= */
 const SUITS = ['♠','♥','♦','♣'];
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -737,21 +728,8 @@ function openSolitaire() {
     render();
   }
 
-  function cardHTML(card, extraClass = '', cardIdx = 0) {
-    const red = isRed(card.s) ? 'red' : 'black';
-    const cls = `sol-card ${red} ${card.up ? '' : 'back'} ${extraClass}`;
-    // Отступ по вертикали для карт в столбце
-    const offset = cardIdx * 22;
-    const style = cardIdx > 0 ? `style="top:${offset}px"` : '';
-    return `<div class="${cls}" ${style}>
-      <span class="sol-rank">${card.up ? RANKS[card.r] : ''}</span>
-      <span class="sol-suit">${card.up ? card.s : ''}</span>
-    </div>`;
-  }
-
   function render() {
     let html = `<div class="sol-wrap"><div class="sol-top">`;
-    // Колода (закрытая) и сброс
     html += `<div class="sol-pile sol-stock ${state.stock.length ? '' : 'empty'}" data-pile="stock">${state.stock.length ? '🂠' : '↻'}</div>`;
     html += `<div class="sol-pile" data-pile="waste" style="margin-left:8px;padding:0">`;
     const w = state.waste[state.waste.length - 1];
@@ -762,7 +740,6 @@ function openSolitaire() {
       </div>`;
     }
     html += `</div>`;
-    // Дом (foundations) — 4 ячейки
     for (let i = 0; i < 4; i++) {
       html += `<div class="sol-pile" data-pile="foundation" data-idx="${i}" style="padding:0">`;
       const f = state.foundations[i];
@@ -779,13 +756,11 @@ function openSolitaire() {
     }
     html += `</div><div class="sol-bottom">`;
 
-    // 7 столбцов
     for (let i = 0; i < 7; i++) {
       html += `<div class="sol-tab" data-pile="tableau" data-idx="${i}">`;
       state.tableau[i].forEach((card, ci) => {
         const isSel = selected && selected.pile === 'tableau' && selected.idx === i && ci >= selected.cardIdx;
         const extra = isSel ? 'sel' : (card.up ? 'top' : '');
-        // Верхняя карта столбца — без offset, остальные с отступом
         const isTop = ci === state.tableau[i].length - 1;
         const style = `style="top:${ci * 22}px;${isTop ? 'z-index:10;' : ''}"`;
         const cls = `sol-card ${isRed(card.s)?'red':'black'} ${card.up ? '' : 'back'} ${extra}`;
@@ -802,11 +777,9 @@ function openSolitaire() {
   }
 
   function bind() {
-    // Клик по колоде
     const stock = win.body.querySelector('[data-pile="stock"]');
     if (stock) stock.onclick = drawStock;
 
-    // Клик по всем картам и пустым колонкам
     win.body.querySelectorAll('.sol-card').forEach(cardEl => {
       cardEl.onclick = (e) => {
         e.stopPropagation();
@@ -837,11 +810,9 @@ function openSolitaire() {
       };
     });
 
-    // Клик по пустым столбцам / пустым foundations
     win.body.querySelectorAll('.sol-tab, .sol-pile[data-pile="foundation"]').forEach(pileEl => {
       const pile = pileEl.dataset.pile;
       const idx  = pileEl.dataset.idx !== undefined ? +pileEl.dataset.idx : undefined;
-      // Не перебиваем клик по карте
       pileEl.addEventListener('click', (e) => {
         if (e.target.classList.contains('sol-card')) return;
         if (!selected) return;
@@ -853,7 +824,6 @@ function openSolitaire() {
 
   function drawStock() {
     if (!state.stock.length) {
-      // Возвращаем сброс обратно в колоду
       while (state.waste.length) {
         const c = state.waste.pop();
         c.up = false;
@@ -869,7 +839,7 @@ function openSolitaire() {
   }
 
   function canPlaceOnTableau(card, targetPile) {
-    if (!targetPile.length) return card.r === 12; // только король на пустой столбец
+    if (!targetPile.length) return card.r === 12;
     const top = targetPile[targetPile.length - 1];
     if (!top.up) return false;
     return (top.r === card.r + 1) && (isRed(top.s) !== isRed(card.s));
@@ -974,7 +944,7 @@ function openNotepad() {
 }
 
 /* =========================================================
-   MY COMPUTER — только 3 программы
+   MY COMPUTER
    ========================================================= */
 function openComputer() {
   const win = createWindow({ title: 'Мой компьютер', width: 600, height: 340 });
@@ -1003,7 +973,7 @@ function openComputer() {
 }
 
 /* =========================================================
-   RECYCLE BIN — удаление/восстановление программ
+   RECYCLE BIN
    ========================================================= */
 function getRemovedApps() { return store.get('removed_apps', []); }
 function setRemovedApps(list) { store.set('removed_apps', list); }
@@ -1107,7 +1077,36 @@ const APPS = {
   recycle:   { name: 'Корзина',       glyph: '🗑️', open: openRecycle },
   settings:  { name: 'Настройки',     glyph: '⚙️', open: openSettings }
 };
-const ALL_DESKTOP_APPS = ['golonet','rex401','finance','mine','solitaire','calc','notepad','computer','recycle','settings'];
+
+// Порядок = порядок значков на рабочем столе.
+// Иконки 0..4 идут в левую колонку, 5..9 — в правую.
+const ALL_DESKTOP_APPS = [
+  'computer',   // 1. Мой компьютер
+  'golonet',    // 2. GoloNET
+  'rex401',     // 3. REX401
+  'finance',    // 4. 1C:Предприятие
+  'recycle',    // 5. Корзина
+  'settings',   // 6. Настройки      → вторая колонка
+  'notepad',    // 7. Блокнот        → вторая колонка
+  'calc',       // 8. Калькулятор    → вторая колонка
+  'mine',       // 9. Сапёр          → вторая колонка
+  'solitaire'   // 10. Косынка       → вторая колонка
+];
+
+// Явная раскладка: левая колонка — 5 ячеек, правая — 5 ячеек.
+// Шаг по X — 110px (ширина иконки 92 + отступ), по Y — 100px.
+const ICON_LAYOUT = {
+  computer:  { left: 20,  top: 20 },
+  golonet:   { left: 20,  top: 120 },
+  rex401:    { left: 20,  top: 220 },
+  finance:   { left: 20,  top: 320 },
+  recycle:   { left: 20,  top: 420 },
+  settings:  { left: 130, top: 20 },
+  notepad:   { left: 130, top: 120 },
+  calc:      { left: 130, top: 220 },
+  mine:      { left: 130, top: 320 },
+  solitaire: { left: 130, top: 420 }
+};
 
 function getVisibleApps() {
   const removed = getRemovedApps();
@@ -1119,9 +1118,7 @@ function getVisibleApps() {
    ========================================================= */
 let iconPositions = null;
 function defaultIconPositions() {
-  const pos = {};
-  ALL_DESKTOP_APPS.forEach((key, i) => { pos[key] = { left: 20, top: 20 + i * 100 }; });
-  return pos;
+  return JSON.parse(JSON.stringify(ICON_LAYOUT));
 }
 function loadIconPositions() {
   iconPositions = store.get('icon_positions', null);
@@ -1129,8 +1126,11 @@ function loadIconPositions() {
     iconPositions = defaultIconPositions();
     store.set('icon_positions', iconPositions);
   }
-  ALL_DESKTOP_APPS.forEach((key, i) => {
-    if (!iconPositions[key]) iconPositions[key] = { left: 20, top: 20 + i * 100 };
+  // Каждому ярлыку — его место из ICON_LAYOUT, если его ещё нет в сохранённых
+  ALL_DESKTOP_APPS.forEach(key => {
+    if (!iconPositions[key]) {
+      iconPositions[key] = ICON_LAYOUT[key] || { left: 20, top: 20 };
+    }
   });
   return iconPositions;
 }
@@ -1139,16 +1139,18 @@ function resetIconPositions() {
   iconPositions = defaultIconPositions();
   saveIconPositions();
   renderIcons();
+  renderStartMenu();
 }
 function renderIcons() {
   const container = document.getElementById('icons');
   container.innerHTML = '';
   if (!iconPositions) loadIconPositions();
   const visible = getVisibleApps();
-  visible.forEach((key, i) => {
+  visible.forEach(key => {
     const app = APPS[key];
     if (!app) return;
-    const pos = iconPositions[key] || { left: 20, top: 20 + i * 100 };
+    // Позиция: сохранённая либо из ICON_LAYOUT
+    const pos = iconPositions[key] || ICON_LAYOUT[key] || { left: 20, top: 20 };
     const el = document.createElement('div');
     el.className = 'icon';
     el.dataset.app = key;

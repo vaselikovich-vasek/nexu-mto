@@ -46,19 +46,22 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Courier New',monos
 #boot{position:fixed;inset:0;background:#000;color:#00d4ff;display:flex;align-items:center;justify-content:center;z-index:99999;font-size:13px;letter-spacing:2px;text-shadow:0 0 8px #00d4ff;transition:opacity .6s}
 #boot .boot-lines>div{margin:4px 0}
 #boot .boot-lines>div:first-child{color:#fff;font-size:16px;margin-bottom:12px}
-.golo-header{display:flex;gap:6px;margin-bottom:8px}
-.golo-search{flex:1;padding:6px 8px;background:rgba(0,20,40,.8);border:1px solid #00d4ff;color:#a8e6ff;font-family:inherit;font-size:12px;outline:none}
-.golo-search:focus{box-shadow:0 0 8px rgba(0,212,255,.5)}
-.golo-content{display:flex;gap:8px;height:calc(100% - 44px)}
-.golo-list{width:240px;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:4px}
-.golo-item{padding:6px 8px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.1);font-size:12px}
-.golo-item:hover{background:rgba(0,212,255,.15)}
-.golo-item.active{background:rgba(0,212,255,.25);color:#fff}
-.golo-item .cat{font-size:9px;color:#4ea8d6;letter-spacing:1px;text-transform:uppercase}
-.golo-reader{flex:1;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:12px}
-.golo-reader h2{color:#7fdcff;font-size:16px;letter-spacing:1px;margin:4px 0 8px;text-shadow:0 0 8px rgba(0,212,255,.5)}
-.golo-reader .body{white-space:pre-wrap;line-height:1.55;font-size:12px}
-.rex-frame{width:100%;height:100%;border:none;display:block;background:#fff}
+.golo-tabs{display:flex;gap:4px;margin-bottom:8px;flex-shrink:0}
+.golo-tabs button{padding:8px 16px;background:rgba(0,40,80,.6);border:1px solid rgba(0,212,255,.4);color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
+.golo-tabs button.active{background:rgba(0,212,255,.3);border-color:#00d4ff;color:#fff}
+.golo-frame{width:100%;height:calc(100% - 44px);border:none;display:block;background:#fff}
+.ana-header{display:flex;gap:6px;margin-bottom:8px}
+.ana-search{flex:1;padding:6px 8px;background:rgba(0,20,40,.8);border:1px solid #00d4ff;color:#a8e6ff;font-family:inherit;font-size:12px;outline:none}
+.ana-search:focus{box-shadow:0 0 8px rgba(0,212,255,.5)}
+.ana-content{display:flex;gap:8px;height:calc(100% - 44px)}
+.ana-list{width:240px;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:4px}
+.ana-item{padding:6px 8px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.1);font-size:12px}
+.ana-item:hover{background:rgba(0,212,255,.15)}
+.ana-item.active{background:rgba(0,212,255,.25);color:#fff}
+.ana-item .cat{font-size:9px;color:#4ea8d6;letter-spacing:1px;text-transform:uppercase}
+.ana-reader{flex:1;overflow-y:auto;border:1px solid rgba(0,212,255,.3);padding:12px}
+.ana-reader h2{color:#7fdcff;font-size:16px;letter-spacing:1px;margin:4px 0 8px;text-shadow:0 0 8px rgba(0,212,255,.5)}
+.ana-reader .body{white-space:pre-wrap;line-height:1.55;font-size:12px}
 .fin-tabs{display:flex;gap:4px;margin-bottom:10px;flex-shrink:0}
 .fin-tabs button{padding:8px 16px;background:rgba(0,40,80,.6);border:1px solid rgba(0,212,255,.4);color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
 .fin-tabs button.active{background:rgba(0,212,255,.3);border-color:#00d4ff;color:#fff}
@@ -148,6 +151,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Courier New',monos
 .wp-btn{background:transparent;border:1px solid rgba(0,212,255,.4);color:#a8e6ff;padding:6px;cursor:pointer;font-family:inherit;font-size:10px}
 .wp-btn:hover{border-color:#00d4ff}
 .wp-preview{height:50px;margin-bottom:4px;border-radius:2px}
+.settings-actions{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.settings-actions button{width:100%;padding:10px;background:rgba(0,40,80,.9);border:1px solid #00d4ff;color:#7fdcff;font-family:inherit;cursor:pointer;font-size:11px;letter-spacing:1px}
+.settings-actions button:hover{background:#00d4ff;color:#000}
+.settings-actions button.danger{border-color:#ff6b6b;color:#ff6b6b}
+.settings-actions button.danger:hover{background:#ff6b6b;color:#000}
+.settings-actions button.success{border-color:#4eff7a;color:#4eff7a}
+.settings-actions button.success:hover{background:#4eff7a;color:#000}
 </style>
 </head>
 <body>
@@ -293,49 +303,79 @@ function closeWindow(id) {
 }
 
 /* =========================================================
-   GoloNET
+   GoloNET — две вкладки: Google Docs + Google Sheets
    ========================================================= */
-const DEFAULT_DOCS = [
-  { id: 'd1', cat: 'Регламент', title: 'Общий регламент МТО',
-    body: '1. Каждый боец обязан знать устав и регламент подразделения.\n2. Информация, полученная через GoloNET, не подлежит разглашению.\n3. При обнаружении утечки данных — немедленно доложить командиру.\n4. Использование терминала в личных целях допускается в свободное от службы время.\n5. Любые рапорты подаются через REX401.' },
-  { id: 'd2', cat: 'Регламент', title: 'Правила подачи рапортов через REX401',
-    body: '— Рапорт подаётся через форму Google Forms (кнопка в REX401).\n— Инвентарные описи подаются не позднее 24 часов после смены.\n— Боевые рапорты — в течение 6 часов после операции.\n— Рапорты о повреждениях — немедленно.\n— Запросы снабжения — за 48 часов.' },
-  { id: 'd3', cat: 'Шаблоны', title: 'Инвентарная опись — образец',
-    body: 'ОБЪЕКТ: <название>\nДАТА: <дд.мм.гггг>\n\n1. Бластерные винтовки DC-15A — 12 шт. (исправны)\n2. Бластерные пистолеты DC-17 — 8 шт. (исправны)\n3. Термо-детонаторы — 40 шт.\n4. Медицинские наборы — 6 шт.\n5. Ремкомплекты — 4 шт.\n\nПРИМЕЧАНИЕ: <текст>\nОТВЕТСТВЕННЫЙ: <позывной>' },
-  { id: 'd4', cat: 'Контакты', title: 'Контактные данные штаба',
-    body: 'Командир батальона: CT-7567 «Рекс» — канал 7-A\nСвязь с командованием: генерал-джедай Кеноби — канал 1-H\nМедицинский отсек: канал 3-MED\nИнженерная служба: канал 9-ENG\n\nПрямая линия GoloNET: всегда доступна.' },
-  { id: 'd5', cat: 'Кодекс', title: 'Кодекс Республики — выдержки',
-    body: '«Республика стоит на страже мира и порядка во всей Галактике.»\n\nСтатья 1. Гражданин обязан соблюдать законы Республики.\nСтатья 2. Силы Республики защищают граждан от внешних и внутренних угроз.\nСтатья 3. Информация, касающаяся безопасности Республики, является конфиденциальной.' },
-  { id: 'd6', cat: 'Снабжение', title: 'Типовой список снабжения отряда',
-    body: 'Боекомплект:\n— Патроны к DC-15A: 600\n— Патроны к DC-17: 300\n— Термо-детонаторы: 40\n\nПродовольствие:\n— Рационы: 120\n— Вода: 200 л\n\nМедицина:\n— Бакта-пластыри: 30\n— Колхицин: 20' },
-  { id: 'd7', cat: 'Техника', title: 'Регламент обслуживания LAAT/i',
-    body: '— Ежедневный осмотр корпуса — перед вылетом.\n— Проверка двигателей — каждые 50 часов.\n— Замена охлаждающей жидкости — каждые 200 часов.\n— Полное ТО — каждые 1000 часов.\n— При обнаружении повреждений — немедленный доклад инженеру.' },
-  { id: 'd8', cat: 'Общее', title: 'Инструкция по использованию терминала',
-    body: '— Терминал GAR-TAC — основной инструмент связи.\n— GoloNET — справочная система.\n— REX401 — подача рапортов через Google Forms.\n— 1C:Предприятие — финансы и биржа.\n— В свободное время разрешены игры (Сапёр, Косынка).' }
-];
+const GOLO_DOC_URL = 'https://docs.google.com/document/d/1zHbd_54RpkrQ10rcpN8-TCeZVYjhJwIuKeD1DJ7E1Hs/edit?tab=t.0';
+const GOLO_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1Rmfexdf3njJ_QCVE06umF5DzBOR60dBMSuv2EX5OHrs/edit?gid=0#gid=0';
 
 function openGoloNET() {
-  let docs = store.get('golonet_docs', DEFAULT_DOCS);
+  const win = createWindow({ title: 'GoloNET // Информационная сеть', width: 960, height: 640 });
+  const body = win.body;
+  body.style.padding = '0';
+  body.style.overflow = 'hidden';
+
+  body.innerHTML = `
+    <div class="golo-tabs" style="padding:10px 10px 0 10px;">
+      <button data-tab="doc" class="active">ДОКУМЕНТ</button>
+      <button data-tab="sheet">ТАБЛИЦА</button>
+    </div>
+    <iframe class="golo-frame" allowfullscreen></iframe>`;
+
+  const tabsEl = body.querySelectorAll('.golo-tabs button');
+  const iframe = body.querySelector('.golo-frame');
+
+  function activateTab(tab) {
+    tabsEl.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    iframe.src = tab === 'doc' ? GOLO_DOC_URL : GOLO_SHEET_URL;
+  }
+
+  tabsEl.forEach(t => t.onclick = () => activateTab(t.dataset.tab));
+  activateTab('doc');
+}
+
+/* =========================================================
+   ANALytics — справочная система в стиле GoloNET
+   ========================================================= */
+const ANA_DOCS = [
+  { id: 'a1', cat: 'Сводки', title: 'Сводка за неделю — боевые действия',
+    body: 'СЕКТОР: Внешнее Кольцо\nПЕРИОД: 1–7 день\n\n— Проведено 12 операций.\n— Уничтожено 8 единиц техники противника.\n— Потери: 2 бойца, 1 LAAT/i повреждён.\n— Освобождено 3 населённых пункта.\n\nПРИМЕЧАНИЕ: активность сепаратистов снизилась на 15%.' },
+  { id: 'a2', cat: 'Сводки', title: 'Анализ логистики за месяц',
+    body: 'СНАБЖЕНИЕ:\n— Продовольствие: 92% от плана\n— Медикаменты: 87%\n— Боеприпасы: 78% (требуется пополнение)\n— Топливо: 95%\n\nПРОБЛЕМЫ:\n— Задержка конвоя на Хайпори.\n— Повреждение склада на Риши.\n\nРЕКОМЕНДАЦИИ:\n— Увеличить резерв медикаментов.\n— Проверить маршруты конвоев.' },
+  { id: 'a3', cat: 'Разведка', title: 'Отчёт по активности противника',
+    body: 'ЗАФИКСИРОВАНО:\n— 3 крупных лагеря сепаратистов.\n— 2 склада боеприпасов.\n— Передвижение дроидов B2 в секторе 7.\n\nПРЕДПОЛОЖЕНИЕ:\nПротивник готовит наступление на позиции 7-го корпуса.\n\nРЕКОМЕНДАЦИЯ:\nУсилить разведку и подготовить резерв.' },
+  { id: 'a4', cat: 'Разведка', title: 'Контакт с местным населением',
+    body: 'РЕГИОН: Татуин, южные пустоши\n\n— 87% населения лояльны Республике.\n— 10% нейтральны.\n— 3% подозреваются в связях с сепаратистами.\n\nПРИМЕЧАНИЕ:\nМестные старейшины готовы предоставить проводников.' },
+  { id: 'a5', cat: 'Статистика', title: 'Эффективность подразделений',
+    body: 'ПОДРАЗДЕЛЕНИЕ | ОПЕРАЦИЙ | УСПЕХ\n\n— 501-й легион — 24 — 92%\n— 212-й батальон — 18 — 88%\n— 7-й корпус — 30 — 85%\n— 104-й батальон — 15 — 80%\n\nСРЕДНЕЕ ПО АРМИИ: 86%\n\nЛУЧШЕЕ ПОДРАЗДЕЛЕНИЕ: 501-й легион' },
+  { id: 'a6', cat: 'Статистика', title: 'Потери по типам техники',
+    body: 'ТЕХНИКА | ПОТЕРЯНО | ВОССТАНОВЛЕНО\n\n— LAAT/i — 6 — 4\n— AT-TE — 3 — 2\n— TX-130 — 8 — 5\n— BARC — 12 — 9\n— V-19 — 4 — 2\n\nИТОГО: 33 потеряно, 22 восстановлено.\nПроцент восстановления: 66%.' },
+  { id: 'a7', cat: 'Финансы', title: 'Бюджет на квартал',
+    body: 'СТАТЬЯ | ПЛАН | ФАКТ | %\n\n— Снабжение — 12.5М — 11.8М — 94%\n— Ремонт техники — 8.2М — 8.9М — 108%\n— Медицина — 3.4М — 3.1М — 91%\n— Топливо — 6.7М — 6.9М — 103%\n\nОБЩИЙ БАЛАНС: 108% — перерасход на ремонт.\nРЕКОМЕНДАЦИЯ: пересмотреть бюджет ремонта.' },
+  { id: 'a8', cat: 'Финансы', title: 'Экономия ресурсов',
+    body: 'ИНИЦИАТИВЫ:\n— Переход на энергосберегающие генераторы: -12% расходов.\n— Переработка повреждённой техники: +8% восстановления.\n— Оптимизация маршрутов снабжения: -5% топлива.\n\nПРОГНОЗ:\nЭкономия за квартал — около 2.3 млн кредитов.' }
+];
+
+function openANALytics() {
   let selectedId = null, searchQuery = '';
-  const win = createWindow({ title: 'GoloNET // Информационная сеть', width: 760, height: 520 });
+  const win = createWindow({ title: 'ANALytics // Аналитический отдел', width: 760, height: 520 });
   const body = win.body;
 
   body.innerHTML = `
-    <div class="golo-header">
-      <input class="golo-search" type="text" placeholder="// Поиск по базе данных МТО...">
+    <div class="ana-header">
+      <input class="ana-search" type="text" placeholder="// Поиск по аналитическим данным...">
     </div>
-    <div class="golo-content">
-      <div class="golo-list"></div>
-      <div class="golo-reader"></div>
+    <div class="ana-content">
+      <div class="ana-list"></div>
+      <div class="ana-reader"></div>
     </div>`;
 
-  const listEl   = body.querySelector('.golo-list');
-  const readerEl = body.querySelector('.golo-reader');
-  const searchEl = body.querySelector('.golo-search');
+  const listEl   = body.querySelector('.ana-list');
+  const readerEl = body.querySelector('.ana-reader');
+  const searchEl = body.querySelector('.ana-search');
 
   function renderList() {
     const q = searchQuery.toLowerCase();
-    const filtered = docs.filter(d =>
+    const filtered = ANA_DOCS.filter(d =>
       !q || (d.title||'').toLowerCase().includes(q) ||
       (d.body||'').toLowerCase().includes(q) ||
       (d.cat||'').toLowerCase().includes(q));
@@ -344,22 +384,22 @@ function openGoloNET() {
       return;
     }
     listEl.innerHTML = filtered.map(d => `
-      <div class="golo-item ${d.id===selectedId?'active':''}" data-id="${d.id}">
+      <div class="ana-item ${d.id===selectedId?'active':''}" data-id="${d.id}">
         <div class="cat">${escapeHTML(d.cat || '')}</div>
         <div>${escapeHTML(d.title || '')}</div>
       </div>`).join('');
-    listEl.querySelectorAll('.golo-item').forEach(el => {
+    listEl.querySelectorAll('.ana-item').forEach(el => {
       el.onclick = () => { selectedId = el.dataset.id; renderList(); renderReader(); };
     });
   }
 
   function renderReader() {
     if (!selectedId) {
-      readerEl.innerHTML = '<div style="color:#4ea8d6;">// выберите документ слева</div>';
+      readerEl.innerHTML = '<div style="color:#4ea8d6;">// выберите запись слева</div>';
       return;
     }
-    const d = docs.find(x => x.id === selectedId);
-    if (!d) { readerEl.innerHTML = '<div style="color:#4ea8d6;">// документ не найден</div>'; return; }
+    const d = ANA_DOCS.find(x => x.id === selectedId);
+    if (!d) { readerEl.innerHTML = '<div style="color:#4ea8d6;">// запись не найдена</div>'; return; }
     readerEl.innerHTML = `
       <div style="color:#4ea8d6;font-size:10px;letter-spacing:2px;">${escapeHTML((d.cat||'').toUpperCase())}</div>
       <h2>${escapeHTML(d.title || '')}</h2>
@@ -367,7 +407,6 @@ function openGoloNET() {
   }
 
   searchEl.oninput = () => { searchQuery = searchEl.value; renderList(); };
-
   renderList(); renderReader();
 }
 
@@ -381,7 +420,7 @@ function openRex401() {
   const body = win.body;
   body.style.padding = '0';
   body.style.overflow = 'hidden';
-  body.innerHTML = `<iframe class="rex-frame" src="${REX_FORM_URL}" allowfullscreen></iframe>`;
+  body.innerHTML = `<iframe class="fin-iframe" src="${REX_FORM_URL}" allowfullscreen></iframe>`;
 }
 
 /* =========================================================
@@ -1045,8 +1084,10 @@ function openRecycle() {
    SETTINGS
    ========================================================= */
 function openSettings() {
-  const win = createWindow({ title: 'Настройки', width: 440, height: 440 });
-  win.body.innerHTML = `<div class="settings">
+  const win = createWindow({ title: 'Настройки', width: 460, height: 540 });
+  const body = win.body;
+
+  body.innerHTML = `<div class="settings">
     <div class="settings-label">// ОБОИ</div>
     <div class="settings-grid">
       ${Object.entries(WALLPAPERS).map(([k,v]) => `
@@ -1055,11 +1096,50 @@ function openSettings() {
           <span>${v.name}</span>
         </button>`).join('')}
     </div>
-    <div class="settings-label" style="margin-top:20px;">// РАБОЧИЙ СТОЛ</div>
-    <button class="golo-btn" style="width:100%;padding:8px;" id="reset-icons">↺ СБРОСИТЬ ЯРЛЫКИ</button>
+    <div class="settings-actions">
+      <button class="success" id="reset-positions">↺ ВЕРНУТЬ ВСЕ ПРОГРАММЫ НА МЕСТА</button>
+      <button id="restore-all-apps">↺ ВОССТАНОВИТЬ ВСЕ ЯРЛЫКИ ИЗ КОРЗИНЫ</button>
+      <button class="danger" id="factory-reset">⚠ ПОЛНЫЙ СБРОС (всё по умолчанию)</button>
+    </div>
   </div>`;
-  win.body.querySelectorAll('.wp-btn').forEach(b => b.onclick = () => applyWallpaper(b.dataset.key));
-  win.body.querySelector('#reset-icons').onclick = () => { if (confirm('Вернуть ярлыки?')) resetIconPositions(); };
+
+  body.querySelectorAll('.wp-btn').forEach(b => {
+    b.onclick = () => applyWallpaper(b.dataset.key);
+  });
+
+  body.querySelector('#reset-positions').onclick = () => {
+    if (!confirm('Вернуть все ярлыки на их изначальные места?')) return;
+    resetIconPositions();
+    body.querySelector('#reset-positions').textContent = '✓ ЯРЛЫКИ ВОЗВРАЩЕНЫ';
+    setTimeout(() => {
+      body.querySelector('#reset-positions').textContent = '↺ ВЕРНУТЬ ВСЕ ПРОГРАММЫ НА МЕСТА';
+    }, 2000);
+  };
+
+  body.querySelector('#restore-all-apps').onclick = () => {
+    if (!confirm('Восстановить все удалённые ярлыки из корзины?')) return;
+    setRemovedApps([]);
+    renderIcons();
+    renderStartMenu();
+    body.querySelector('#restore-all-apps').textContent = '✓ ЯРЛЫКИ ВОССТАНОВЛЕНЫ';
+    setTimeout(() => {
+      body.querySelector('#restore-all-apps').textContent = '↺ ВОССТАНОВИТЬ ВСЕ ЯРЛЫКИ ИЗ КОРЗИНЫ';
+    }, 2000);
+  };
+
+  body.querySelector('#factory-reset').onclick = () => {
+    if (!confirm('Полный сброс: обои, ярлыки, удалённые программы?\nЛичные данные (блокнот, документы) НЕ затрагиваются.')) return;
+    iconPositions = defaultIconPositions();
+    saveIconPositions();
+    setRemovedApps([]);
+    applyWallpaper('console');
+    renderIcons();
+    renderStartMenu();
+    body.querySelector('#factory-reset').textContent = '✓ ВСЁ СБРОШЕНО';
+    setTimeout(() => {
+      body.querySelector('#factory-reset').textContent = '⚠ ПОЛНЫЙ СБРОС (всё по умолчанию)';
+    }, 2000);
+  };
 }
 
 /* =========================================================
@@ -1067,6 +1147,7 @@ function openSettings() {
    ========================================================= */
 const APPS = {
   golonet:   { name: 'GoloNET',       glyph: '📡', open: openGoloNET },
+  analytics: { name: 'ANALytics',     glyph: '📊', open: openANALytics },
   rex401:    { name: 'REX401',        glyph: '📋', open: openRex401 },
   finance:   { name: '1C:Предприятие',glyph: '💰', open: openFinance },
   mine:      { name: 'Сапёр',         glyph: '💣', open: openMinesweeper },
@@ -1078,29 +1159,18 @@ const APPS = {
   settings:  { name: 'Настройки',     glyph: '⚙️', open: openSettings }
 };
 
-// Порядок = порядок значков на рабочем столе.
-// Иконки 0..4 идут в левую колонку, 5..9 — в правую.
 const ALL_DESKTOP_APPS = [
-  'computer',   // 1. Мой компьютер
-  'golonet',    // 2. GoloNET
-  'rex401',     // 3. REX401
-  'finance',    // 4. 1C:Предприятие
-  'recycle',    // 5. Корзина
-  'settings',   // 6. Настройки      → вторая колонка
-  'notepad',    // 7. Блокнот        → вторая колонка
-  'calc',       // 8. Калькулятор    → вторая колонка
-  'mine',       // 9. Сапёр          → вторая колонка
-  'solitaire'   // 10. Косынка       → вторая колонка
+  'computer', 'golonet', 'analytics', 'rex401', 'finance', 'recycle',
+  'settings', 'notepad', 'calc', 'mine', 'solitaire'
 ];
 
-// Явная раскладка: левая колонка — 5 ячеек, правая — 5 ячеек.
-// Шаг по X — 110px (ширина иконки 92 + отступ), по Y — 100px.
 const ICON_LAYOUT = {
   computer:  { left: 20,  top: 20 },
   golonet:   { left: 20,  top: 120 },
-  rex401:    { left: 20,  top: 220 },
-  finance:   { left: 20,  top: 320 },
-  recycle:   { left: 20,  top: 420 },
+  analytics: { left: 20,  top: 220 },
+  rex401:    { left: 20,  top: 320 },
+  finance:   { left: 20,  top: 420 },
+  recycle:   { left: 20,  top: 520 },
   settings:  { left: 130, top: 20 },
   notepad:   { left: 130, top: 120 },
   calc:      { left: 130, top: 220 },
@@ -1126,7 +1196,6 @@ function loadIconPositions() {
     iconPositions = defaultIconPositions();
     store.set('icon_positions', iconPositions);
   }
-  // Каждому ярлыку — его место из ICON_LAYOUT, если его ещё нет в сохранённых
   ALL_DESKTOP_APPS.forEach(key => {
     if (!iconPositions[key]) {
       iconPositions[key] = ICON_LAYOUT[key] || { left: 20, top: 20 };
@@ -1149,7 +1218,6 @@ function renderIcons() {
   visible.forEach(key => {
     const app = APPS[key];
     if (!app) return;
-    // Позиция: сохранённая либо из ICON_LAYOUT
     const pos = iconPositions[key] || ICON_LAYOUT[key] || { left: 20, top: 20 };
     const el = document.createElement('div');
     el.className = 'icon';
@@ -1195,7 +1263,6 @@ function bindIconDrag(el, app, key) {
     document.addEventListener('mouseup', up);
   });
 
-  // ПКМ — удалить ярлык в корзину
   el.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     if (!confirm(`Удалить ярлык "${app.name}" с рабочего стола?\n(Восстановить можно в Корзине)`)) return;
